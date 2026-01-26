@@ -229,13 +229,13 @@ This chapter covers how CAMARA APIs model responses, including both successful b
 
 #### 3.1.1. Scope and Problem Statement
 
-CAMARA APIs may need to return negative, partial, or unknown business outcomes even when a request is syntactically valid, authenticated, authorized, and processed successfully (HTTP 2xx). Without explicit guidance, CAMARA APIs have historically modeled these cases inconsistently, for example using boolean-only results, implicit meaning via empty payloads, or HTTP 4xx codes for data unavailability.
+CAMARA APIs may need to return negative, partial, or unknown business outcomes even when a request is syntactically valid, authenticated, authorized, and processed successfully (HTTP 2xx). Without explicit guidance, CAMARA APIs have historically modeled these cases inconsistently, for example using boolean-only results, implicit meaning via empty payloads, or HTTP 4xx codes for data unavailability. This section provides guidance on how APIs can model such business-level results clearly and consistently.
 
 #### 3.1.2. Core Principles
 
 The following principles apply to modeling business-level outcomes in successful responses:
 
-* HTTP `2xx` responses indicate that the request was valid and processed; they MAY still represent negative, partial, or unknown business outcomes.
+* HTTP `2xx` status codes indicate that the request was valid and processed; they MAY still represent negative, partial, or unknown business outcomes.
 * Business-level outcomes SHOULD be modeled explicitly in the response body rather than inferred from missing data or encoded as errors.
 * APIs that need to express negative, partial, or unknown business outcomes SHOULD expose such outcomes explicitly via one or more domain-specific response fields (existing or newly introduced), defined as an enum or closed set of values.
 * APIs MAY add optional context fields to provide additional information about the outcome:
@@ -245,6 +245,7 @@ The following principles apply to modeling business-level outcomes in successful
 * Outcome semantics (success, failure, partial, unknown, not applicable) MUST remain visible via the primary outcome field(s) and MUST NOT be moved into `contextCode` or `contextMessage`.
 * HTTP `4xx` status codes SHOULD be reserved for true request errors (invalid input, unsupported identifier, authentication/authorization failure, or contract/configuration mismatches).
 * APIs SHOULD NOT use `4xx` solely to indicate data-level unavailability when the request is otherwise valid. Such cases SHOULD be expressed via the primary outcome field in a `2xx` response.
+* The response body of `4xx` errors MAY include diagnostic information (such as `code` and `message` per Section 3.2), but this describes the request error, not a business outcome.
 
 This guidance primarily applies to new APIs and new MAJOR versions; existing APIs may evolve towards it over time (see Section 3.1.5).
 
@@ -296,7 +297,7 @@ components:
           example: "The requested information could not be disclosed for privacy regulation reasons."
 ```
 
-An example JSON response using HTTP `200`:
+An example JSON response body for an HTTP `200` response:
 
 ```json
 {
