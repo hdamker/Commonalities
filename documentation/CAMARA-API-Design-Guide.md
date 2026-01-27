@@ -241,8 +241,8 @@ The following principles apply to modeling business-level outcomes in successful
 * APIs MAY add optional context fields to provide additional information about the outcome:
   * `contextCode` — a machine-readable code providing additional context
   * `contextMessage` — a human-readable explanation providing additional context
-* These optional context fields are additive. Clients MUST be able to determine the business outcome from the primary outcome field(s) alone, without relying on `contextCode` or `contextMessage`.
-* Outcome semantics (success, failure, partial, unknown, not applicable) MUST remain visible via the primary outcome field(s) and MUST NOT be moved into `contextCode` or `contextMessage`.
+* These optional context fields are additive. They MUST NOT be the only way to interpret the business outcome of a successful response.
+* Outcome semantics (success, failure, partial, unknown, not applicable) MUST remain visible via the API's domain-specific response semantics and MUST NOT be moved into `contextCode` or `contextMessage`.
 * HTTP `4xx` status codes SHOULD be reserved for true request errors (invalid input, unsupported identifier, authentication/authorization failure, or contract/configuration mismatches).
 * APIs SHOULD NOT use `4xx` solely to indicate data-level unavailability when the request is otherwise valid. Such cases SHOULD be expressed via the primary outcome field in a `2xx` response.
 * The response body of `4xx` errors MAY include diagnostic information (such as `code` and `message` per Section 3.2), but this describes the request error, not a business outcome.
@@ -260,12 +260,19 @@ The recommended structural pattern for business-level outcomes consists of:
   * Provider-specific codes if agreed contractually. Provider-specific codes SHOULD be namespaced to avoid collisions.
 * An **optional `contextMessage` field** — a human-readable explanation providing additional context.
 
-**Client interpretation:** Clients MUST be able to determine the primary business outcome from the API’s domain-specific outcome semantics alone, without relying on `contextCode` or `contextMessage`.
+**Client interpretation:** `contextCode` and `contextMessage` are supplementary. They MUST NOT be the only way to interpret the business outcome of a successful response. The API specification MUST define how the business outcome is determined from the response payload (for example via explicit outcome enums, documented nullability, or documented presence/absence rules).
 
 Note that:
 * The primary outcome field name is API- and domain-specific.
 * Not all APIs need to introduce a new primary outcome field; existing fields may already express the outcome clearly.
 * The `contextCode` and `contextMessage` names are standardized across APIs that choose to adopt them.
+
+**Design options for existing APIs:**
+
+Some existing APIs have required non-nullable fields in successful responses (such as booleans) that cannot directly represent "unknown" or "not available" outcomes without confusing clients. This guidance makes such gaps visible. Alignment may require changes in a future MAJOR version. Two common design options are:
+
+* **Explicit outcome enum:** Introduce a domain-specific enum field (for example `tenureStatus: KNOWN | UNKNOWN | NOT_APPLICABLE`) and make the data field conditional or nullable, present only when the outcome is KNOWN.
+* **Nullability/presence rules:** Where compatible, make the data field nullable or optional and document that `null` (or absence) represents unknown/unavailable. Use `contextCode`/`contextMessage` to explain why (for example privacy restriction, data not available).
 
 #### 3.1.4. Example
 
@@ -290,7 +297,7 @@ components:
         contextCode:
           type: string
           description: Optional machine-readable code providing additional context.
-          example: REGIONAL_PRIVACY_RESTRICTION
+          example: COMMON.REGIONAL_PRIVACY_RESTRICTION
         contextMessage:
           type: string
           description: Optional human-readable explanation providing additional context.
@@ -302,7 +309,7 @@ An example JSON response body for an HTTP `200` response:
 ```json
 {
   "status": "NOT_APPLICABLE",
-  "contextCode": "REGIONAL_PRIVACY_RESTRICTION",
+  "contextCode": "COMMON.REGIONAL_PRIVACY_RESTRICTION",
   "contextMessage": "The requested information could not be disclosed for privacy regulation reasons."
 }
 ```
