@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Sample CAMARA Service API
+  title: Sample Service
   description: |
     Template for a request-response CAMARA API.
 
