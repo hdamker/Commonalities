@@ -1,6 +1,6 @@
 info:
   title: CAMARA common event and subscription data types
-  description: |
+  description: | 
     Common data types for CAMARA event notification and subscription management.
     This file contains Commonalities-owned schemas that are identical across all
     CAMARA APIs supporting event notifications and/or explicit subscriptions.

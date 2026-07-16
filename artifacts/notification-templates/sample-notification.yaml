@@ -33,7 +33,7 @@ security:
   - {}
 
 paths:
-  /your-webhook-notification-url:
+  /your_webhook_notification_url:
     post:
       tags:
         - CAMARA Cloud Event
